@@ -32,7 +32,9 @@ defmodule MusicVoteApi.YoutubeServiceTest do
 
     with_mock HTTPotion, [get: fn(_) -> youtube_results end] do
       expected = ["ULHeRdgeT54", "q8GiCLDG-wg", "Khvf1Rewvjc", "bEB_DfTllOM", "HBjCh2sMACQ"]
-      assert expected == search(@search_attrs)
+      actual = search(@search_attrs)
+      assert :ok == elem(actual, 0)
+      assert expected == elem(actual, 1)
     end
   end
 
@@ -83,6 +85,19 @@ defmodule MusicVoteApi.YoutubeServiceTest do
     with_mock HTTPotion, [get: fn(_) -> youtube_results end] do
       search(@space_attrs)
       assert called HTTPotion.get("https://www.googleapis.com/youtube/v3/search?part=id&type=video&q=see+the+light+san+holo&key=test")
+    end
+  end
+
+  test 'it returns error when API fails' do
+    youtube_results = %HTTPotion.Response{
+      body: "{}",
+      headers: %HTTPotion.Headers{hdrs: %{}},
+      status_code: 400}
+
+
+    with_mock HTTPotion, [get: fn(_) -> youtube_results end] do
+      actual = search(@search_attrs)
+      assert :error == elem(actual, 0)
     end
   end
 end

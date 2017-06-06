@@ -33,9 +33,17 @@ defmodule MusicVoteApi.TrackControllerTest do
 
   test "searches youtube and renders link ids", %{conn: conn} do
     links_ids = ["ULHeRdgeT54", "q8GiCLDG-wg", "Khvf1Rewvjc", "bEB_DfTllOM", "HBjCh2sMACQ"]
-    with_mock MusicVoteApi.YoutubeService, [search: fn(_) -> links_ids end] do
+    with_mock MusicVoteApi.YoutubeService, [search: fn(_) -> {:ok, links_ids} end] do
       conn = post conn, track_path(conn, :find_links), track: @find_attrs
       assert json_response(conn, 200)["links"] == links_ids
+    end
+  end
+
+  test "returns errors when youtube api fails", %{conn: conn} do
+    errors = ["bad stuff happens"]
+    with_mock MusicVoteApi.YoutubeService, [search: fn(_) -> {:error, errors} end] do
+      conn = post conn, track_path(conn, :find_links), track: @find_attrs
+      assert json_response(conn, 500)["errors"] == errors
     end
   end
 

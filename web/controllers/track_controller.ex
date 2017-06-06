@@ -9,8 +9,14 @@ defmodule MusicVoteApi.TrackController do
   end
 
   def find_links(conn, %{"track" => track_params}) do
-    links = MusicVoteApi.YoutubeService.search(track_params)
-    render(conn, "links.json", %{links: links})
+    case MusicVoteApi.YoutubeService.search(track_params) do
+      {:ok, links} ->
+        render(conn, "links.json", %{links: links})
+      {:error, errors} ->
+        conn
+        |> put_status(500)
+        |> render(MusicVoteApi.ErrorView, "error.json", %{errors: errors})
+    end
   end
 
   def create(conn, %{"track" => track_params}) do
